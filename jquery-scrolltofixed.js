@@ -22,6 +22,9 @@
         // Add a reverse reference to the DOM object.
         base.$el.data('ScrollToFixed', base);
 
+        // Scroll Parent
+        var scrollParent;
+
         // A flag so we know if the scroll has been reset.
         var isReset = false;
 
@@ -262,10 +265,10 @@
             }
 
             // Grab the current horizontal scroll position.
-            var x = $(window).scrollLeft();
+            var x = scrollParent.scrollLeft();
 
             // Grab the current vertical scroll position.
-            var y = $(window).scrollTop();
+            var y = scrollParent.scrollTop();
 
             // Get the limit, if there is one.
             var limit = getLimit();
@@ -273,14 +276,14 @@
             // If the vertical scroll position, plus the optional margin, would
             // put the target element at the specified limit, set the target
             // element to absolute.
-            if (base.options.minWidth && $(window).width() < base.options.minWidth) {
+            if (base.options.minWidth && scrollParent.width() < base.options.minWidth) {
                 if (!isUnfixed() || !wasReset) {
                     postPosition();
                     target.trigger('preUnfixed.ScrollToFixed');
                     setUnfixed();
                     target.trigger('unfixed.ScrollToFixed');
                 }
-            } else if (base.options.maxWidth && $(window).width() > base.options.maxWidth) {
+            } else if (base.options.maxWidth && scrollParent.width() > base.options.maxWidth) {
                 if (!isUnfixed() || !wasReset) {
                     postPosition();
                     target.trigger('preUnfixed.ScrollToFixed');
@@ -329,7 +332,7 @@
                 }
             } else {
                 if (limit > 0) {
-                    if (y + $(window).height() - target.outerHeight(true) >= limit - (getMarginTop() || -getBottom())) {
+                    if (y + scrollParent.height() - target.outerHeight(true) >= limit - (getMarginTop() || -getBottom())) {
                         if (isFixed()) {
                             postPosition();
                             target.trigger('preUnfixed.ScrollToFixed');
@@ -434,6 +437,9 @@
             // Capture the options for this plugin.
             base.options = $.extend({}, $.ScrollToFixed.defaultOptions, options);
 
+            // Scroll Parent
+            scrollParent = base.options.scrollParent;
+
             originalZIndex = target.css('z-index')
 
             // Turn off this functionality for devices that do not support it.
@@ -461,16 +467,16 @@
 
             // Reset the target element offsets when the window is resized, then
             // check to see if we need to fix or unfix the target element.
-            $(window).bind('resize.ScrollToFixed', windowResize);
+            scrollParent.bind('resize.ScrollToFixed', windowResize);
 
             // When the window scrolls, check to see if we need to fix or unfix
             // the target element.
-            $(window).bind('scroll.ScrollToFixed', windowScroll);
+            scrollParent.bind('scroll.ScrollToFixed', windowScroll);
 
             // For touch devices, call checkScroll directlly rather than
             // rAF wrapped windowScroll to animate the element
             if ('ontouchmove' in window) {
-              $(window).bind('touchmove.ScrollToFixed', checkScroll);
+              scrollParent.bind('touchmove.ScrollToFixed', checkScroll);
             }
 
             if (base.options.preFixed) {
@@ -520,8 +526,8 @@
                 setUnfixed();
                 target.trigger('unfixed.ScrollToFixed');
 
-                $(window).unbind('resize.ScrollToFixed', windowResize);
-                $(window).unbind('scroll.ScrollToFixed', windowScroll);
+                scrollParent.unbind('resize.ScrollToFixed', windowResize);
+                scrollParent.unbind('scroll.ScrollToFixed', windowScroll);
 
                 target.unbind('.ScrollToFixed');
 
@@ -545,7 +551,8 @@
         limit : 0,
         bottom : -1,
         zIndex : 1000,
-        baseClassName: 'scroll-to-fixed-fixed'
+        baseClassName: 'scroll-to-fixed-fixed',
+        scrollParent: $(window)
     };
 
     // Returns enhanced elements that will fix to the top of the page when the
